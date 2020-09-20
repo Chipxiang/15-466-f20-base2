@@ -91,11 +91,11 @@ void Scene::draw(Camera const &camera) const {
 }
 
 void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_light) const {
-
 	//Iterate through all drawables, sending each one to OpenGL:
-	//std::cout << "size of drawables = " << drawables.size() << std::endl;
 	for (auto const &drawable : drawables) {
-		//std::cout << "drawing drawable " << std::endl;
+		glm::vec3 pos = drawable.transform->position;
+		std::cout << "drawing drawable " << drawable.transform->name << " " 
+                  << pos.x << " " << pos.y << " " << pos.z << std::endl;
 		//Reference to drawable's pipeline for convenience:
 		Scene::Drawable::Pipeline const &pipeline = drawable.pipeline;
 

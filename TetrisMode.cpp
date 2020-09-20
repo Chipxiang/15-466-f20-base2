@@ -46,14 +46,15 @@ TetrisMode::TetrisMode() : scene(*cube_scene) {
 
     Mesh const &cube_mesh = cube_meshes->lookup("Cube");
     
-    Scene::Transform t;
-    t.position = base_cube->position + glm::vec3(2, 0, 0);
-    t.name = "Cube1";
-	t.parent = nullptr;
-    cube1 = &t;
+	scene.transforms.emplace_back();
+    Scene::Transform *t = &scene.transforms.back();
+    t->position = base_cube->position + glm::vec3(0, 0, 0.1);
+    t->name = "Cube1";
+	t->parent = base_cube;
+    cube1 = &scene.transforms.back();
 	
 
-	Scene::Drawable drawable_cube1(&t);
+	Scene::Drawable drawable_cube1(t);
 	//drawable_cube1.pipeline = lit_color_texture_program_pipeline;
 	drawable_cube1.pipeline.vao = cube_meshes_for_lit_color_texture_program;
 	drawable_cube1.pipeline.type = cube_mesh.type;
