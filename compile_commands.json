@@ -1,0 +1,44 @@
+[
+    {
+        "arguments": [
+            "g++",
+            "-c",
+            "-no-pie",
+            "-std=c++17",
+            "-g",
+            "-Wall",
+            "-Werror",
+            "-I../nest-libs/linux/SDL2/include/SDL2",
+            "-D_REENTRANT",
+            "-I../nest-libs/linux/glm/include",
+            "-I../nest-libs/linux/libpng/include",
+            "-O",
+            "-o",
+            "objs/main.o",
+            "main.cpp"
+        ],
+        "directory": "/home/fengying/Projects/Game/15-466-f20-base2",
+        "file": "main.cpp"
+    },
+    {
+        "arguments": [
+            "g++",
+            "-c",
+            "-no-pie",
+            "-std=c++17",
+            "-g",
+            "-Wall",
+            "-Werror",
+            "-I../nest-libs/linux/SDL2/include/SDL2",
+            "-D_REENTRANT",
+            "-I../nest-libs/linux/glm/include",
+            "-I../nest-libs/linux/libpng/include",
+            "-O",
+            "-o",
+            "objs/TetrisMode.o",
+            "TetrisMode.cpp"
+        ],
+        "directory": "/home/fengying/Projects/Game/15-466-f20-base2",
+        "file": "TetrisMode.cpp"
+    }
+]
