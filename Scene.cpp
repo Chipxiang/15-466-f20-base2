@@ -1,6 +1,7 @@
 #include "Scene.hpp"
 
 #include "gl_errors.hpp"
+#include "glm/fwd.hpp"
 #include "read_write_chunk.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
@@ -33,24 +34,21 @@ glm::mat4x3 Scene::Transform::make_parent_to_local() const {
 	// [ 0 1/s.y 0 0 ] * [rot^-1 0 ] * [ 0 0 0 -p.y ]
 	// [ 0 0 1/s.z 0 ]   [       0 ]   [ 0 0 0 -p.z ]
 	//                   [ 0 0 0 1 ]   [ 0 0 0  1   ]
-//std::cout << "make_parent_to_local 1" << std::endl;
+
 	glm::vec3 inv_scale;
 	//taking some care so that we don't end up with NaN's , just a degenerate matrix, if scale is zero:
 	inv_scale.x = (scale.x == 0.0f ? 0.0f : 1.0f / scale.x);
 	inv_scale.y = (scale.y == 0.0f ? 0.0f : 1.0f / scale.y);
 	inv_scale.z = (scale.z == 0.0f ? 0.0f : 1.0f / scale.z);
 
-//std::cout << "make_parent_to_local 2" << std::endl;
 	//compute inverse of rotation:
 	glm::mat3 inv_rot = glm::mat3_cast(glm::inverse(rotation));
 
-//std::cout << "make_parent_to_local 3" << std::endl;
 	//scale the rows of rot:
 	inv_rot[0] *= inv_scale;
 	inv_rot[1] *= inv_scale;
 	inv_rot[2] *= inv_scale;
 
-//std::cout << "make_parent_to_local 4" << std::endl;
 	return glm::mat4x3(
 		inv_rot[0],
 		inv_rot[1],
@@ -60,16 +58,16 @@ glm::mat4x3 Scene::Transform::make_parent_to_local() const {
 }
 
 glm::mat4x3 Scene::Transform::make_local_to_world() const {
-	if (!parent) { //std::cout << "make_local_to_world (!parent) " << name << std::endl;
+	if (!parent) {
 		return make_local_to_parent();
-	} else { //std::cout << "make_local_to_world (else) " << name << std::endl;
+	} else {
 		return parent->make_local_to_world() * glm::mat4(make_local_to_parent()); //note: glm::mat4(glm::mat4x3) pads with a (0,0,0,1) row
 	}
 }
 glm::mat4x3 Scene::Transform::make_world_to_local() const {
-	if (!parent) {//std::cout << "make_world_to_local (!parent) " << name << std::endl;
+	if (!parent) {
 		return make_parent_to_local();
-	} else { //std::cout << "make_world_to_local (else) " << name << std::endl;
+	} else {
 		return make_parent_to_local() * glm::mat4(parent->make_world_to_local()); //note: glm::mat4(glm::mat4x3) pads with a (0,0,0,1) row
 	}
 }
@@ -93,15 +91,18 @@ void Scene::draw(Camera const &camera) const {
 void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_light) const {
 	//Iterate through all drawables, sending each one to OpenGL:
 	for (auto const &drawable : drawables) {
-		// glm::vec3 pos = drawable.transform->position;
-		// std::cout << "drawing drawable " << drawable.transform->name << " " 
-        //           << pos.x << " " << pos.y << " " << pos.z << " ";
+		glm::vec3 pos = drawable.transform->position;
+		std::cout << drawable.transform->name << " " 
+                   << pos.x << " " << pos.y << " " << pos.z << " ";
+		if (drawable.transform->parent) {
+			glm::mat4x3 parent_to_local = drawable.transform->make_parent_to_local();
+			glm::vec3 parent_pos = drawable.transform->parent->position;
+			glm::vec3 current_pos = parent_to_local * glm::vec4(parent_pos.x, parent_pos.y, parent_pos.z, 1);
+			std::cout << "(" << current_pos.x << ", " << current_pos.y << ", " << current_pos.z << ") ";
+		}
 
 		//Reference to drawable's pipeline for convenience:
 		Scene::Drawable::Pipeline const &pipeline = drawable.pipeline;
-
-		//std::cout << pipeline.program << " "  << pipeline.vao << " " << pipeline.count << std::endl;
-
 		//skip any drawables without a shader program set:
 		if (pipeline.program == 0) continue;
 		//skip any drawables that don't reference any vertex array:
@@ -109,22 +110,16 @@ void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_lig
 		//skip any drawables that don't contain any vertices:
 		if (pipeline.count == 0) continue;
 
-
-		//std::cout << "draw 0 setting shader program " << drawable.transform->name << std::endl;
 		//Set shader program:
 		glUseProgram(pipeline.program);
 
 		//Set attribute sources:
-
-		//std::cout << "draw 0 gsetting attribute sources " << drawable.transform->name << std::endl;
 		glBindVertexArray(pipeline.vao);
-		//std::cout << "draw 1 " << drawable.transform->name << std::endl;
-		//Configure program uniforms:
 
+		//Configure program uniforms:
 		//the object-to-world matrix is used in all three of these uniforms:
 		assert(drawable.transform); //drawables *must* have a transform
-		//std::cout << "draw 1.5" << std::endl;
-		glm::mat4x3 object_to_world = drawable.transform->make_local_to_world();//std::cout << "draw 2" << std::endl;
+		glm::mat4x3 object_to_world = drawable.transform->make_local_to_world();
 
 		//OBJECT_TO_CLIP takes vertices from object space to clip space:
 		if (pipeline.OBJECT_TO_CLIP_mat4 != -1U) {
@@ -133,7 +128,7 @@ void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_lig
 		}
 
 		//the object-to-light matrix is used in the next two uniforms:
-		glm::mat4x3 object_to_light = world_to_light * glm::mat4(object_to_world);//std::cout << "draw 3" << std::endl;
+		glm::mat4x3 object_to_light = world_to_light * glm::mat4(object_to_world);
 
 		//OBJECT_TO_CLIP takes vertices from object space to light space:
 		if (pipeline.OBJECT_TO_LIGHT_mat4x3 != -1U) {
@@ -148,7 +143,6 @@ void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_lig
 
 		//set any requested custom uniforms:
 		if (pipeline.set_uniforms) pipeline.set_uniforms();
-//std::cout << "draw 4" << std::endl;
 		//set up textures:
 		for (uint32_t i = 0; i < Drawable::Pipeline::TextureCount; ++i) {
 			if (pipeline.textures[i].texture != 0) {
@@ -157,27 +151,25 @@ void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_lig
 			}
 		}
 
-		// std::cout << "draw 5 " << drawable.transform->name << std::endl;
 		//draw the object:
 		glDrawArrays(pipeline.type, pipeline.start, pipeline.count);
 
-	//std::cout << "draw 6 " << Drawable::Pipeline::TextureCount << std::endl;
 		//un-bind textures:
-		for (uint32_t i = 0; i < Drawable::Pipeline::TextureCount; ++i) {//std::cout << "texture " << i << std::endl;
+		for (uint32_t i = 0; i < Drawable::Pipeline::TextureCount; ++i) {
 			if (pipeline.textures[i].texture != 0) {
 				glActiveTexture(GL_TEXTURE0 + i); 
 				glBindTexture(pipeline.textures[i].target, 0);
-			}//std::cout << "texture " << i << std::endl;
+			}
 		}
 		glActiveTexture(GL_TEXTURE0);
 
 	}
 
+	std::cout << std::endl;
 	// drawables done
-//std::cout << "draw 7" << std::endl;
 	glUseProgram(0);
 	glBindVertexArray(0);
-//std::cout << "draw 8" << std::endl;
+
 	GL_ERRORS();
 }
 
