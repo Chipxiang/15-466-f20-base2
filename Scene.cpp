@@ -93,14 +93,14 @@ void Scene::draw(Camera const &camera) const {
 void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_light) const {
 	//Iterate through all drawables, sending each one to OpenGL:
 	for (auto const &drawable : drawables) {
-		glm::vec3 pos = drawable.transform->position;
-		std::cout << "drawing drawable " << drawable.transform->name << " " 
-                  << pos.x << " " << pos.y << " " << pos.z << " ";
+		// glm::vec3 pos = drawable.transform->position;
+		// std::cout << "drawing drawable " << drawable.transform->name << " " 
+        //           << pos.x << " " << pos.y << " " << pos.z << " ";
 
 		//Reference to drawable's pipeline for convenience:
 		Scene::Drawable::Pipeline const &pipeline = drawable.pipeline;
 
-		std::cout << pipeline.program << " "  << pipeline.vao << " " << pipeline.count << std::endl;
+		//std::cout << pipeline.program << " "  << pipeline.vao << " " << pipeline.count << std::endl;
 
 		//skip any drawables without a shader program set:
 		if (pipeline.program == 0) continue;

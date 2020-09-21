@@ -5,6 +5,7 @@
 #include "DrawLines.hpp"
 #include "Mesh.hpp"
 #include "Load.hpp"
+#include "SDL_mouse.h"
 #include "gl_errors.hpp"
 #include "data_path.hpp"
 
@@ -37,7 +38,7 @@ Load< Scene > cube_scene(LoadTagDefault, []() -> Scene const * {
 });
 
 
-void TetrisMode::add_cube(Scene::Transform *parent, glm::vec3 pos_offset) {
+Scene::Transform* TetrisMode::add_cube(Scene::Transform *parent, glm::vec3 pos_offset) {
 	Mesh const &cube_mesh = cube_meshes->lookup("Cube");
     
 	// create new transform
@@ -54,19 +55,20 @@ void TetrisMode::add_cube(Scene::Transform *parent, glm::vec3 pos_offset) {
 	drawable.pipeline.start = cube_mesh.start;
 	drawable.pipeline.count = cube_mesh.count;
     scene.drawables.emplace_back(drawable);
+	return t;
 }
 
 TetrisMode::TetrisMode() : scene(*cube_scene) {
 	for (auto &transform : scene.transforms) {
-        std::cout << transform.name << std::endl;
+        std::cout << transform.name << " " << transform.position.x << " " << transform.position.y << " " << transform.position.z << std::endl;
 		if (transform.name == "Cube") base_cube = &transform;
 	}
 	if (base_cube == nullptr) throw std::runtime_error("Cube not found.");
 	
 	// add cubes
-	add_cube(base_cube, glm::vec3(0, 0, 2));
-	add_cube(base_cube, glm::vec3(2, 0, 0));
-	add_cube(base_cube, glm::vec3(-2, 0, 0));
+	cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
+	cube2 = add_cube(base_cube, glm::vec3(2, 0, 0));
+	cube3 = add_cube(base_cube, glm::vec3(-2, 0, 0));
 
 	//get pointer to camera for convenience:
 	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
@@ -114,9 +116,20 @@ bool TetrisMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_siz
 			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
+		std::cout << "mouse button down" << std::endl;
 		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
+			std::cout << "set relative mouse mode to true" << std::endl;
 			SDL_SetRelativeMouseMode(SDL_TRUE);
 			return true;
+		}
+		// mouse click for rotation
+		// https://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/examples/index.htm
+		if (evt.button.button == SDL_BUTTON_LEFT) {
+			base_cube->rotation *= glm::quat(0.7071, 0.7071, 0.0, 0.0); // 90 degrees by axis
+		} else if(evt.button.button == SDL_BUTTON_RIGHT) {
+			base_cube->rotation *= glm::quat(0.7071, 0.0, 0.7071, 0.0); // 90 degrees by y axis
+		} else if (evt.button.button == SDL_BUTTON_MIDDLE) {
+			base_cube->rotation *= glm::quat(0.7071, 0, 0, 0.7071); // 90 degrees by z axis
 		}
 	} else if (evt.type == SDL_MOUSEMOTION) {
 		if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
@@ -162,7 +175,7 @@ void TetrisMode::update(float elapsed) {
 		camera->transform->position += move.x * right + move.y * forward;
 	}
 
-	base_cube->position += glm::vec3(0, 0, -0.01);
+	// base_cube->position += glm::vec3(0, 0, -0.01);
 
 	//reset button press counters:
 	left.downs = 0;

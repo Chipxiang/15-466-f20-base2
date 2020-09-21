@@ -27,7 +27,7 @@ struct TetrisMode : Mode {
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
 
-	//hexapod leg to wobble:
+	//the moving cubes
 	Scene::Transform *base_cube = nullptr;
 	Scene::Transform *cube1 = nullptr;
 	Scene::Transform *cube2 = nullptr;
@@ -36,6 +36,6 @@ struct TetrisMode : Mode {
 	//camera:
 	Scene::Camera *camera = nullptr;
 
-	// add cube:
-	void add_cube(Scene::Transform *parent, glm::vec3 pos_offset);
+	// add cube, return the pointer to the new cube
+	Scene::Transform *add_cube(Scene::Transform *parent, glm::vec3 pos_offset);
 };
