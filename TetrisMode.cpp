@@ -5,6 +5,7 @@
 #include "DrawLines.hpp"
 #include "Mesh.hpp"
 #include "Load.hpp"
+#include "SDL_keycode.h"
 #include "SDL_mouse.h"
 #include "gl_errors.hpp"
 #include "data_path.hpp"
@@ -15,13 +16,13 @@
 
 GLuint cube_meshes_for_lit_color_texture_program = 0;
 Load< MeshBuffer > cube_meshes(LoadTagDefault, []() -> MeshBuffer const * {
-	MeshBuffer const *ret = new MeshBuffer(data_path("cube.pnct"));
+	MeshBuffer const *ret = new MeshBuffer(data_path("cube2.pnct"));
 	cube_meshes_for_lit_color_texture_program = ret->make_vao_for_program(lit_color_texture_program->program);
 	return ret;
 });
 
 Load< Scene > cube_scene(LoadTagDefault, []() -> Scene const * {
-	return new Scene(data_path("cube.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
+	return new Scene(data_path("cube2.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
 		Mesh const &mesh = cube_meshes->lookup(mesh_name);
 
 		scene.drawables.emplace_back(transform);
@@ -73,38 +74,38 @@ void TetrisMode::generate_cubes() {
 		scene.drawables.pop_back();
 
 	// reset base_cuby by creating a new cube
-	base_cube = add_cube(nullptr, glm::vec3(0, 0, 0));
+	moving_block[0] = add_cube(nullptr, glm::vec3(0, 0, 0));
 
 	switch(randint) {
 		case 0:
 			// triangle
-			cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
-			cube2 = add_cube(base_cube, glm::vec3(2, 0, 0));
-			cube3 = add_cube(base_cube, glm::vec3(-2, 0, 0));
+			moving_block[1] = add_cube(moving_block[0], glm::vec3(0, 0, 2));
+			moving_block[2] = add_cube(moving_block[0], glm::vec3(2, 0, 0));
+			moving_block[3] = add_cube(moving_block[0], glm::vec3(-2, 0, 0));
 			break;
 		case 1:
 			// line
-			cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
-			cube2 = add_cube(base_cube, glm::vec3(0, 0, -2));
-			cube3 = add_cube(base_cube, glm::vec3(0, 0, 4));
+			moving_block[1] = add_cube(moving_block[0], glm::vec3(0, 0, 2));
+			moving_block[2] = add_cube(moving_block[0], glm::vec3(0, 0, -2));
+			moving_block[3] = add_cube(moving_block[0], glm::vec3(0, 0, 4));
 			break;
 		case 2:
 			// square
-			cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
-			cube2 = add_cube(base_cube, glm::vec3(2, 0, 2));
-			cube3 = add_cube(base_cube, glm::vec3(2, 0, 0));
+			moving_block[1] = add_cube(moving_block[0], glm::vec3(0, 0, 2));
+			moving_block[2] = add_cube(moving_block[0], glm::vec3(2, 0, 2));
+			moving_block[3] = add_cube(moving_block[0], glm::vec3(2, 0, 0));
 			break;
 		case 3:
 			// Z block
-			cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
-			cube2 = add_cube(base_cube, glm::vec3(-2, 0, 2));
-			cube3 = add_cube(base_cube, glm::vec3(2, 0, 0));
+			moving_block[1] = add_cube(moving_block[0], glm::vec3(0, 0, 2));
+			moving_block[2] = add_cube(moving_block[0], glm::vec3(-2, 0, 2));
+			moving_block[3] = add_cube(moving_block[0], glm::vec3(2, 0, 0));
 			break;
 		case 4:
 			// L block
-			cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
-			cube2 = add_cube(base_cube, glm::vec3(0, 0, 4));
-			cube3 = add_cube(base_cube, glm::vec3(-2, 0, 0));
+			moving_block[1] = add_cube(moving_block[0], glm::vec3(0, 0, 2));
+			moving_block[2] = add_cube(moving_block[0], glm::vec3(0, 0, 4));
+			moving_block[3] = add_cube(moving_block[0], glm::vec3(-2, 0, 0));
 			break;
 	}
 }
@@ -112,9 +113,9 @@ void TetrisMode::generate_cubes() {
 TetrisMode::TetrisMode() : scene(*cube_scene) {
 	for (auto &transform : scene.transforms) {
         std::cout << transform.name << " " << transform.position.x << " " << transform.position.y << " " << transform.position.z << std::endl;
-		if (transform.name == "Cube") base_cube = &transform;
+		if (transform.name == "Cube") moving_block[0] = &transform;
 	}
-	if (base_cube == nullptr) throw std::runtime_error("Cube not found.");
+	if (moving_block[0] == nullptr) throw std::runtime_error("Cube not found.");
 
 	generate_cubes();
 
@@ -147,6 +148,10 @@ bool TetrisMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_siz
 			down.downs += 1;
 			down.pressed = true;
 			return true;
+		} else if (evt.key.keysym.sym == SDLK_SPACE) {
+			space.downs += 1;
+			space.pressed = true;
+			return true;
 		}
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
@@ -161,6 +166,9 @@ bool TetrisMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_siz
 		} else if (evt.key.keysym.sym == SDLK_s) {
 			down.pressed = false;
 			return true;
+		} else if (evt.key.keysym.sym == SDLK_SPACE) {
+			space.pressed = false;
+			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
 		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
@@ -170,11 +178,11 @@ bool TetrisMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_siz
 		// mouse click for rotation
 		// https://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/examples/index.htm
 		if (evt.button.button == SDL_BUTTON_LEFT) {
-			base_cube->rotation *= glm::quat(0.7071, 0.7071, 0.0, 0.0); // 90 degrees by axis
+			moving_block[0]->rotation *= glm::quat(0.7071, 0.7071, 0.0, 0.0); // 90 degrees by axis
 		} else if(evt.button.button == SDL_BUTTON_RIGHT) {
-			base_cube->rotation *= glm::quat(0.7071, 0.0, 0.7071, 0.0); // 90 degrees by y axis
+			moving_block[0]->rotation *= glm::quat(0.7071, 0.0, 0.7071, 0.0); // 90 degrees by y axis
 		} else if (evt.button.button == SDL_BUTTON_MIDDLE) {
-			base_cube->rotation *= glm::quat(0.7071, 0, 0, 0.7071); // 90 degrees by z axis
+			moving_block[0]->rotation *= glm::quat(0.7071, 0, 0, 0.7071); // 90 degrees by z axis
 		}
 	} else if (evt.type == SDL_MOUSEMOTION) {
 		if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
@@ -209,7 +217,7 @@ void TetrisMode::update(float elapsed) {
 		if (down.pressed && !up.pressed) move.y =-1.0f;
 		if (!down.pressed && up.pressed) move.y = 1.0f;
 
-		if (left.pressed) {
+		if (space.pressed) {
 			generate_cubes();
 		}
 
@@ -224,7 +232,7 @@ void TetrisMode::update(float elapsed) {
 		camera->transform->position += move.x * right + move.y * forward;
 	}
 
-	base_cube->position += glm::vec3(0, 0, -0.01);
+	moving_block[0]->position += glm::vec3(0, 0, -0.01);
 
 	//reset button press counters:
 	left.downs = 0;
@@ -277,5 +285,6 @@ void TetrisMode::draw(glm::uvec2 const &drawable_size) {
 			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		
 	}
 }

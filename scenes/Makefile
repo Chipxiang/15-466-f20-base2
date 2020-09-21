@@ -15,7 +15,7 @@ EXPORT_SCENE=export-scene.py
 
 DIST=../dist
 
-FILE_NAME=cube
+FILE_NAME=cube2
 
 all : \
 	$(DIST)/$(FILE_NAME).pnct \

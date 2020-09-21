@@ -22,16 +22,13 @@ struct TetrisMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, down, up;
+	} left, right, down, up, space;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
 
 	//the moving cubes
-	Scene::Transform *base_cube = nullptr;
-	Scene::Transform *cube1 = nullptr;
-	Scene::Transform *cube2 = nullptr;
-	Scene::Transform *cube3 = nullptr;
+	Scene::Transform *moving_block[4];
 	
 	//camera:
 	Scene::Camera *camera = nullptr;
