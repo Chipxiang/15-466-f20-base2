@@ -95,9 +95,12 @@ void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_lig
 	for (auto const &drawable : drawables) {
 		glm::vec3 pos = drawable.transform->position;
 		std::cout << "drawing drawable " << drawable.transform->name << " " 
-                  << pos.x << " " << pos.y << " " << pos.z << std::endl;
+                  << pos.x << " " << pos.y << " " << pos.z << " ";
+
 		//Reference to drawable's pipeline for convenience:
 		Scene::Drawable::Pipeline const &pipeline = drawable.pipeline;
+
+		std::cout << pipeline.program << " "  << pipeline.vao << " " << pipeline.count << std::endl;
 
 		//skip any drawables without a shader program set:
 		if (pipeline.program == 0) continue;
@@ -154,7 +157,7 @@ void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_lig
 			}
 		}
 
-	//std::cout << "draw 5" << std::endl;
+		// std::cout << "draw 5 " << drawable.transform->name << std::endl;
 		//draw the object:
 		glDrawArrays(pipeline.type, pipeline.start, pipeline.count);
 

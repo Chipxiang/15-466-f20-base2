@@ -36,36 +36,37 @@ Load< Scene > cube_scene(LoadTagDefault, []() -> Scene const * {
 	});
 });
 
+
+void TetrisMode::add_cube(Scene::Transform *parent, glm::vec3 pos_offset) {
+	Mesh const &cube_mesh = cube_meshes->lookup("Cube");
+    
+	// create new transform
+	scene.transforms.emplace_back();
+    Scene::Transform *t = &scene.transforms.back();
+    t->position = parent->position + pos_offset;
+    t->name = parent->name + "-child";
+	t->parent = parent;
+
+	Scene::Drawable drawable(t);
+	drawable.pipeline = lit_color_texture_program_pipeline;
+	drawable.pipeline.vao = cube_meshes_for_lit_color_texture_program;
+	drawable.pipeline.type = cube_mesh.type;
+	drawable.pipeline.start = cube_mesh.start;
+	drawable.pipeline.count = cube_mesh.count;
+    scene.drawables.emplace_back(drawable);
+}
+
 TetrisMode::TetrisMode() : scene(*cube_scene) {
-	//get pointers to leg for convenience:
 	for (auto &transform : scene.transforms) {
         std::cout << transform.name << std::endl;
 		if (transform.name == "Cube") base_cube = &transform;
 	}
 	if (base_cube == nullptr) throw std::runtime_error("Cube not found.");
-
-    Mesh const &cube_mesh = cube_meshes->lookup("Cube");
-    
-	scene.transforms.emplace_back();
-    Scene::Transform *t = &scene.transforms.back();
-    t->position = base_cube->position + glm::vec3(0, 0, 0.1);
-    t->name = "Cube1";
-	t->parent = base_cube;
-    cube1 = &scene.transforms.back();
 	
-
-	Scene::Drawable drawable_cube1(t);
-	//drawable_cube1.pipeline = lit_color_texture_program_pipeline;
-	drawable_cube1.pipeline.vao = cube_meshes_for_lit_color_texture_program;
-	drawable_cube1.pipeline.type = cube_mesh.type;
-	drawable_cube1.pipeline.start = cube_mesh.start;
-	drawable_cube1.pipeline.count = cube_mesh.count;
-    scene.drawables.emplace_back(drawable_cube1);
-
-	for (auto const &drawable : scene.drawables) {
-		std::cout << "drawable: " << drawable.transform->name << std::endl;
-	}
-
+	// add cubes
+	add_cube(base_cube, glm::vec3(0, 0, 2));
+	add_cube(base_cube, glm::vec3(2, 0, 0));
+	add_cube(base_cube, glm::vec3(-2, 0, 0));
 
 	//get pointer to camera for convenience:
 	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));

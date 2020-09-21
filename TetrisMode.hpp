@@ -36,4 +36,6 @@ struct TetrisMode : Mode {
 	//camera:
 	Scene::Camera *camera = nullptr;
 
+	// add cube:
+	void add_cube(Scene::Transform *parent, glm::vec3 pos_offset);
 };
