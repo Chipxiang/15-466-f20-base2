@@ -38,4 +38,12 @@ struct TetrisMode : Mode {
 
 	// add cube, return the pointer to the new cube
 	Scene::Transform *add_cube(Scene::Transform *parent, glm::vec3 pos_offset);
+
+	// generate new cubes
+	void generate_cubes();
+
+	// the position of ground 
+	int z = -20;
+	// the width of the space
+	int width = 20;
 };

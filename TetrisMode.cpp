@@ -44,9 +44,13 @@ Scene::Transform* TetrisMode::add_cube(Scene::Transform *parent, glm::vec3 pos_o
 	// create new transform
 	scene.transforms.emplace_back();
     Scene::Transform *t = &scene.transforms.back();
-    t->position = parent->position + pos_offset;
-    t->name = parent->name + "-child";
-	t->parent = parent;
+	if (parent == nullptr) {
+		t->name = "Cube";
+	} else {
+		t->position = parent->position + pos_offset;
+		t->name = parent->name + "-child";
+		t->parent = parent;
+	}
 
 	Scene::Drawable drawable(t);
 	drawable.pipeline = lit_color_texture_program_pipeline;
@@ -58,19 +62,62 @@ Scene::Transform* TetrisMode::add_cube(Scene::Transform *parent, glm::vec3 pos_o
 	return t;
 }
 
+
+void TetrisMode::generate_cubes() {
+	// randomly generate 5 shapes
+	int randint = rand() % 5;
+
+	// TODO put the previously moving block to the stable vector
+	// deleting the current block for testing
+	while(scene.drawables.size() > 0)
+		scene.drawables.pop_back();
+
+	// reset base_cuby by creating a new cube
+	base_cube = add_cube(nullptr, glm::vec3(0, 0, 0));
+
+	switch(randint) {
+		case 0:
+			// triangle
+			cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
+			cube2 = add_cube(base_cube, glm::vec3(2, 0, 0));
+			cube3 = add_cube(base_cube, glm::vec3(-2, 0, 0));
+			break;
+		case 1:
+			// line
+			cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
+			cube2 = add_cube(base_cube, glm::vec3(0, 0, -2));
+			cube3 = add_cube(base_cube, glm::vec3(0, 0, 4));
+			break;
+		case 2:
+			// square
+			cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
+			cube2 = add_cube(base_cube, glm::vec3(2, 0, 2));
+			cube3 = add_cube(base_cube, glm::vec3(2, 0, 0));
+			break;
+		case 3:
+			// Z block
+			cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
+			cube2 = add_cube(base_cube, glm::vec3(-2, 0, 2));
+			cube3 = add_cube(base_cube, glm::vec3(2, 0, 0));
+			break;
+		case 4:
+			// L block
+			cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
+			cube2 = add_cube(base_cube, glm::vec3(0, 0, 4));
+			cube3 = add_cube(base_cube, glm::vec3(-2, 0, 0));
+			break;
+	}
+}
+
 TetrisMode::TetrisMode() : scene(*cube_scene) {
 	for (auto &transform : scene.transforms) {
         std::cout << transform.name << " " << transform.position.x << " " << transform.position.y << " " << transform.position.z << std::endl;
 		if (transform.name == "Cube") base_cube = &transform;
 	}
 	if (base_cube == nullptr) throw std::runtime_error("Cube not found.");
-	
-	// add cubes
-	cube1 = add_cube(base_cube, glm::vec3(0, 0, 2));
-	cube2 = add_cube(base_cube, glm::vec3(2, 0, 0));
-	cube3 = add_cube(base_cube, glm::vec3(-2, 0, 0));
 
-	//get pointer to camera for convenience:
+	generate_cubes();
+
 	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
 	camera = &scene.cameras.front();
 }
@@ -116,9 +163,7 @@ bool TetrisMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_siz
 			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
-		std::cout << "mouse button down" << std::endl;
 		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
-			std::cout << "set relative mouse mode to true" << std::endl;
 			SDL_SetRelativeMouseMode(SDL_TRUE);
 			return true;
 		}
@@ -164,6 +209,10 @@ void TetrisMode::update(float elapsed) {
 		if (down.pressed && !up.pressed) move.y =-1.0f;
 		if (!down.pressed && up.pressed) move.y = 1.0f;
 
+		if (left.pressed) {
+			generate_cubes();
+		}
+
 		//make it so that moving diagonally doesn't go faster:
 		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
 
@@ -175,7 +224,7 @@ void TetrisMode::update(float elapsed) {
 		camera->transform->position += move.x * right + move.y * forward;
 	}
 
-	// base_cube->position += glm::vec3(0, 0, -0.01);
+	base_cube->position += glm::vec3(0, 0, -0.01);
 
 	//reset button press counters:
 	left.downs = 0;
