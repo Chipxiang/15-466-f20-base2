@@ -2,7 +2,7 @@
 
 Author: Jianxiang Li, Fengying Yang
 
-Design: a tetris game in 3D space.
+Design: Tetris game in 3D world.
 
 Screen Shot:
 
@@ -10,7 +10,7 @@ Screen Shot:
 
 How To Play:
 
-Use WASD keys to move the cubes around, and click mouse keys for rotation.
+Use WASD keys to move the cubes around, and click mouse keys(left, middle, right) for rotation.
 
 
 Sources: 
