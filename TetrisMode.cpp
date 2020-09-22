@@ -20,10 +20,10 @@ Load< MeshBuffer > cube_meshes(LoadTagDefault, []() -> MeshBuffer const* {
 	return ret;
 	});
 
-Load< Scene > cube_scene(LoadTagDefault, []() -> Scene const * {
-	return new Scene(data_path("cube2.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
+Load< Scene > cube_scene(LoadTagDefault, []() -> Scene const* {
+	return new Scene(data_path("cube2.scene"), [&](Scene& scene, Scene::Transform* transform, std::string const& mesh_name) {
 		//std::cout << mesh_name << " " << transform->position.x << " " << transform->position.y << " " << transform->position.z << std::endl;
-		Mesh const &mesh = cube_meshes->lookup(mesh_name);
+		Mesh const& mesh = cube_meshes->lookup(mesh_name);
 
 		scene.drawables.emplace_back(transform);
 		Scene::Drawable& drawable = scene.drawables.back();
@@ -98,7 +98,7 @@ bool TetrisMode::is_collide() {
 		// Floor
 		if (world_position.z <= GROUND_Z)
 			return true;
-		
+
 		/*
 		for (int n = 0; n < 3; n++) {
 			for (int m = 0; m < 4; m++) {
@@ -111,7 +111,7 @@ bool TetrisMode::is_collide() {
 		int y = (int)(world_position.y - MIN_Y) / CUBE_SIZE;
 		//int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
 		int z;
-		for ( z = Z_DIM - 1; z >= 0; z--) {
+		for (z = Z_DIM - 1; z >= 0; z--) {
 			if (world_position.z <= 2 * (z + 1) + GROUND_Z) {
 				if (pile_exists[x][y][z])
 					return true;
@@ -125,7 +125,74 @@ bool TetrisMode::is_collide() {
 	}
 	return false;
 }
-
+void TetrisMode::remove_layer() {
+	bool full = true;
+	int layer = 0;
+	while (full) {
+		for (int q = 0; q < Z_DIM; q++) {
+			full = true;
+			for (int o = 0; o < X_DIM; o++) {
+				for (int p = 0; p < Y_DIM; p++) {
+					if (!pile_exists[o][p][q]) {
+						full = false;
+						layer = q;
+						break;
+					}
+				}
+				if (!full)
+					break;
+			}
+			if (full)
+				break;
+		}
+		if (!full)
+			break;
+		for (int o = 0; o < X_DIM; o++) {
+			for (int p = 0; p < Y_DIM; p++) {
+				if (pile_exists[o][p][layer]) {
+					scene.drawables.erase(pile_drawables[o][p][layer]);
+					pile_exists[o][p][layer] = false;
+				}
+			}
+		}
+		for (int q = layer + 1; q < Z_DIM; q++) {
+			for (int o = 0; o < X_DIM; o++) {
+				for (int p = 0; p < Y_DIM; p++) {
+					if (pile_exists[o][p][q]) {
+						pile_drawables[o][p][q-1] = pile_drawables[o][p][q];
+						pile_exists[o][p][q-1] = true;
+						pile_exists[o][p][q] = false;
+						pile_drawables[o][p][q - 1]->transform->position.z -= CUBE_SIZE;
+					}
+				}
+			}
+		}
+	}
+}
+void TetrisMode::remove_lowest_layer() {
+	bool full = true;
+	int layer = 0;
+	for (int o = 0; o < X_DIM; o++) {
+		for (int p = 0; p < Y_DIM; p++) {
+			if (pile_exists[o][p][layer]) {
+				scene.drawables.erase(pile_drawables[o][p][layer]);
+				pile_exists[o][p][layer] = false;
+			}
+		}
+	}
+	for (int q = layer + 1; q < Z_DIM; q++) {
+		for (int o = 0; o < X_DIM; o++) {
+			for (int p = 0; p < Y_DIM; p++) {
+				if (pile_exists[o][p][q]) {
+					pile_drawables[o][p][q - 1] = pile_drawables[o][p][q];
+					pile_exists[o][p][q - 1] = true;
+					pile_exists[o][p][q] = false;
+					pile_drawables[o][p][q - 1]->transform->position.z -= CUBE_SIZE;
+				}
+			}
+		}
+	}
+}
 void TetrisMode::record_drawables() {
 	int i = 0;
 	std::list<Scene::Drawable>::iterator it = scene.drawables.end();
@@ -136,7 +203,7 @@ void TetrisMode::record_drawables() {
 		//std::cout << world_position.x << "," << world_position.y << "," << world_position.z << std::endl;
 		int x = (int)ceil(world_position.x - MIN_X) / CUBE_SIZE;
 		int y = (int)ceil(world_position.y - MIN_Y) / CUBE_SIZE;
-		
+
 		int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
 		pile_drawables[x][y][z] = it;
 		pile_exists[x][y][z] = true;
@@ -152,10 +219,6 @@ void TetrisMode::record_drawables() {
 		}
 		std::cout << std::endl;
 	}*/
-	for (int i = 0; i < 4; i++) {
-		
-		
-	}
 
 }
 
@@ -217,17 +280,17 @@ void TetrisMode::generate_cubes() {
 }
 
 void TetrisMode::create_floor() {
-	Mesh const &blue = cube_meshes->lookup("blue_plane");
-	Mesh const &orange = cube_meshes->lookup("orange_plane");
-	Mesh plane[2] = {blue, orange};
+	Mesh const& blue = cube_meshes->lookup("blue_plane");
+	Mesh const& orange = cube_meshes->lookup("orange_plane");
+	Mesh plane[2] = { blue, orange };
 	int current_index = 0;
-    
+
 	for (int x = -width; x < width; x += 2) {
 		for (int y = -width; y < width; y += 2) {
 			// create new transform
 			scene.transforms.emplace_back();
-			Scene::Transform *t = &scene.transforms.back();
-			t->position = glm::vec3(x, y, GROUND_Z-1);
+			Scene::Transform* t = &scene.transforms.back();
+			t->position = glm::vec3(x, y, GROUND_Z - 1);
 			t->name = "plane(" + std::to_string(x) + ", " + std::to_string(y) + ")";
 
 			Scene::Drawable drawable(t);
@@ -256,8 +319,8 @@ TetrisMode::TetrisMode() : scene(*cube_scene) {
 	if (plane[1] == nullptr) throw std::runtime_error("blue_plane not found.");
 
 	// clear the current drawables
-	while(scene.drawables.size() > 0)
-	 	scene.drawables.pop_back();
+	while (scene.drawables.size() > 0)
+		scene.drawables.pop_back();
 
 
 	// create the floor 
@@ -391,10 +454,10 @@ void TetrisMode::update(float elapsed) {
 
 		// for testing
 		if (space.pressed) {
-			generate_cubes();
+			remove_lowest_layer();
 			space.pressed = false;
 		}
- 
+
 		// TODO update the position checking 
 		if (left.pressed) {
 			if (moving_block[0]->position.x > -width)
@@ -427,8 +490,9 @@ void TetrisMode::update(float elapsed) {
 		}
 		record_drawables();
 		generate_cubes();
+		remove_layer();
 	}
-		
+
 	else {
 		moving_block[0]->position += glm::vec3(0, 0, -0.1);
 	}
