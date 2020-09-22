@@ -51,6 +51,8 @@ struct TetrisMode : Mode {
 	void create_floor();
 
 	void record_drawables();
+	glm::vec3 get_world_position(Scene::Transform* transform);
+	void break_down_child_parent_relations(Scene::Transform* transform);
 	// size of cube
 	static const int CUBE_SIZE = 2;
 	// the position of ground 

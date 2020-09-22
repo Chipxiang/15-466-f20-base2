@@ -9,7 +9,6 @@
 #include "SDL_mouse.h"
 #include "gl_errors.hpp"
 #include "data_path.hpp"
-
 #include <glm/gtc/type_ptr.hpp>
 
 #include <random>
@@ -65,21 +64,35 @@ Scene::Transform* TetrisMode::add_cube(Scene::Transform* parent, glm::vec3 pos_o
 	return t;
 }
 
+glm::vec3 TetrisMode::get_world_position(Scene::Transform* transform) {
+	glm::vec3 world_position;
+	if (transform->parent) {
+		world_position = transform->make_local_to_parent() * glm::vec4(transform->parent->position.x, transform->parent->position.y, transform->parent->position.z, 1);
+	}
+	else {
+		world_position = transform->position;
+	}
+	return world_position;
+}
+
+void TetrisMode::break_down_child_parent_relations(Scene::Transform* transform) {
+	if (!transform->parent)
+		return;
+	glm::vec3 world_position = get_world_position(transform);
+	transform->parent = nullptr;
+	transform->position.x = world_position.x;
+	transform->position.y = world_position.y;
+	transform->position.z = world_position.z;
+}
 bool TetrisMode::is_collide() {
 	// Check each of the moving block's position.
 	for (int i = 0; i < 4; i++) {
-		glm::vec3 world_position;
-		if (i != 0) {
-			world_position = moving_block[i]->make_local_to_parent() * glm::vec4(moving_block[0]->position.x, moving_block[0]->position.y, moving_block[0]->position.z, 1);
-		}
-		else {
-			world_position = moving_block[i]->position;
-		}
+		glm::vec3 world_position = get_world_position(moving_block[i]);
 
 		/*std::cout << "Cube: " << i << " " << "Pos:" << moving_block[i]->position.x << "," << moving_block[i]->position.y << "," << moving_block[i]->position.z << std::endl;
 		std::cout << "World Pos:" << world_position.x << "," << world_position.y << "," << world_position.z << std::endl;*/
 		// Floor
-		if (moving_block[i]->position.z <= GROUND_Z + CUBE_SIZE)
+		if (world_position.z <= GROUND_Z + CUBE_SIZE)
 			return true;
 		
 		/*
@@ -96,9 +109,7 @@ bool TetrisMode::is_collide() {
 		if (!pile_exists[x][y][z])
 			continue;
 		else {
-			
 			return true;
-
 		}
 	}
 	return false;
@@ -109,14 +120,8 @@ void TetrisMode::record_drawables() {
 	std::list<Scene::Drawable>::iterator it = scene.drawables.end();
 	it--;
 	for (; i < 4; --it) {
-		std::cout << it->transform->name;
 		i++;
-		glm::vec3 world_position;
-		if(it->transform->parent)
-			world_position = it->transform->make_local_to_parent()* glm::vec4(it->transform->parent->position.x, it->transform->parent->position.y, it->transform->parent->position.z, 1);
-		else {
-			world_position = it->transform->position;
-		}
+		glm::vec3 world_position = get_world_position(it->transform);
 		std::cout << world_position.x << "," << world_position.y << "," << world_position.z << std::endl;
 		int x = (int)ceil(world_position.x - MIN_X) / CUBE_SIZE;
 		int y = (int)ceil(world_position.y - MIN_Y) / CUBE_SIZE;
@@ -125,7 +130,7 @@ void TetrisMode::record_drawables() {
 		pile_exists[x][y][z] = true;
 		std::cout << x << "," << y << "," << z << std::endl;
 	}
-	
+	/*
 	for (int o = 0; o < X_DIM; o++) {
 		for (int p = 0; p < Y_DIM; p++) {
 			for (int q = 0; q < Z_DIM; q++) {
@@ -134,13 +139,14 @@ void TetrisMode::record_drawables() {
 			}
 		}
 		std::cout << std::endl;
-	}
+	}*/
 	for (int i = 0; i < 4; i++) {
 		
 		
 	}
 
 }
+
 void TetrisMode::generate_cubes() {
 	// randomly generate 5 shapes
 	int randint = rand() % 5;
@@ -149,18 +155,14 @@ void TetrisMode::generate_cubes() {
 	// deleting the current block for testing
 	//while (scene.drawables.size() > 0)
 	//	scene.drawables.pop_back();
-	/*
-	bool flag = false;
+	/*bool flag = false;
 	for (int o = 0; o < X_DIM; o++) {
 		if (flag) break;
 		for (int p = 0; p < Y_DIM; p++) {
-			if (flag) break;
-			for (int q = 0; q < Z_DIM; q++) {
-				if (flag) break;
+			for (int q = 0; q < 2; q++) {
 				if (pile_exists[o][p][q]) {
 					scene.drawables.erase(pile_drawables[o][p][q]);
 					pile_exists[o][p][q] = false;
-					flag = true;
 				}
 			}
 		}
@@ -402,9 +404,17 @@ void TetrisMode::update(float elapsed) {
 		}
 	}
 
-	if (!is_collide())
+	if (is_collide()) {
+		for (int i = 0; i < 4; i++) {
+			break_down_child_parent_relations(moving_block[i]);
+		}
+		record_drawables();
+		generate_cubes();
+	}
+		
+	else {
 		moving_block[0]->position += glm::vec3(0, 0, -0.1);
-
+	}
 	//reset button press counters:
 	left.downs = 0;
 	right.downs = 0;
