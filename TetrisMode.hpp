@@ -29,6 +29,8 @@ struct TetrisMode : Mode {
 
 	//the moving cubes
 	Scene::Transform *moving_block[4];
+	// the floor
+	Scene::Transform *plane[2];
 	
 	//camera:
 	Scene::Camera *camera = nullptr;
@@ -39,8 +41,11 @@ struct TetrisMode : Mode {
 	// generate new cubes
 	void generate_cubes();
 
+	// show the floor tiles
+	void create_floor();
+
 	// the position of ground 
-	int z = -20;
+	int z = -10;
 	// the width of the space
-	int width = 20;
+	int width = 10;
 };
