@@ -1,8 +1,8 @@
-# (TODO: your game's title)
+# Tetris 3D
 
-Author: (TODO: your name)
+Author: Jianxiang Li, Fengying Yang
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+Design: Tetris game in 3D world.
 
 Screen Shot:
 
@@ -10,9 +10,14 @@ Screen Shot:
 
 How To Play:
 
-(TODO: describe the controls and (if needed) goals/strategy.)
+Use WASD keys to move the cubes around, and click mouse keys(left, middle, right) for rotation.
 
-Sources: (TODO: list a source URL for any assets you did not create yourself. Make sure you have a license for the asset.)
+
+Sources: 
+
+Base assets from https://github.com/15-466/15-466-f20-base2
+
+Cubes built with blender by Fengying.
 
 This game was built with [NEST](NEST.md).
 

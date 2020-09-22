@@ -1,6 +1,7 @@
 #include "Scene.hpp"
 
 #include "gl_errors.hpp"
+#include "glm/fwd.hpp"
 #include "read_write_chunk.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
@@ -88,19 +89,29 @@ void Scene::draw(Camera const &camera) const {
 }
 
 void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_light) const {
-
 	//Iterate through all drawables, sending each one to OpenGL:
 	for (auto const &drawable : drawables) {
+		if (drawable.transform->name[0] == 'C') {
+			glm::vec3 pos = drawable.transform->position;
+			//std::cout << drawable.transform->name << " " 
+            //       << pos.x << " " << pos.y << " " << pos.z << " ";
+			if (drawable.transform->parent) {
+				glm::mat4x3 parent_to_local = drawable.transform->make_parent_to_local();
+				glm::vec3 parent_pos = drawable.transform->parent->position;
+				glm::vec3 current_pos = parent_to_local * glm::vec4(parent_pos.x, parent_pos.y, parent_pos.z, -1.0);
+				//std::cout << "(" << current_pos.x << ", " << current_pos.y << ", " << current_pos.z << ") ";
+			}
+		}
+		
+		
 		//Reference to drawable's pipeline for convenience:
 		Scene::Drawable::Pipeline const &pipeline = drawable.pipeline;
-
 		//skip any drawables without a shader program set:
 		if (pipeline.program == 0) continue;
 		//skip any drawables that don't reference any vertex array:
 		if (pipeline.vao == 0) continue;
 		//skip any drawables that don't contain any vertices:
 		if (pipeline.count == 0) continue;
-
 
 		//Set shader program:
 		glUseProgram(pipeline.program);
@@ -109,7 +120,6 @@ void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_lig
 		glBindVertexArray(pipeline.vao);
 
 		//Configure program uniforms:
-
 		//the object-to-world matrix is used in all three of these uniforms:
 		assert(drawable.transform); //drawables *must* have a transform
 		glm::mat4x3 object_to_world = drawable.transform->make_local_to_world();
@@ -136,7 +146,6 @@ void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_lig
 
 		//set any requested custom uniforms:
 		if (pipeline.set_uniforms) pipeline.set_uniforms();
-
 		//set up textures:
 		for (uint32_t i = 0; i < Drawable::Pipeline::TextureCount; ++i) {
 			if (pipeline.textures[i].texture != 0) {
@@ -151,7 +160,7 @@ void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_lig
 		//un-bind textures:
 		for (uint32_t i = 0; i < Drawable::Pipeline::TextureCount; ++i) {
 			if (pipeline.textures[i].texture != 0) {
-				glActiveTexture(GL_TEXTURE0 + i);
+				glActiveTexture(GL_TEXTURE0 + i); 
 				glBindTexture(pipeline.textures[i].target, 0);
 			}
 		}
@@ -159,6 +168,8 @@ void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_lig
 
 	}
 
+	//std::cout << std::endl;
+	// drawables done
 	glUseProgram(0);
 	glBindVertexArray(0);
 
