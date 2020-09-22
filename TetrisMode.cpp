@@ -213,7 +213,7 @@ void TetrisMode::create_floor() {
 			// create new transform
 			scene.transforms.emplace_back();
 			Scene::Transform *t = &scene.transforms.back();
-			t->position = glm::vec3(x, y, z-1);
+			t->position = glm::vec3(x, y, GROUND_Z-1);
 			t->name = "plane(" + std::to_string(x) + ", " + std::to_string(y) + ")";
 
 			Scene::Drawable drawable(t);
@@ -402,8 +402,8 @@ void TetrisMode::update(float elapsed) {
 		}
 	}
 
-	if (moving_block[0]->position.z > z)
-		moving_block[0]->position += glm::vec3(0, 0, -0.01);
+	if (!is_collide())
+		moving_block[0]->position += glm::vec3(0, 0, -0.1);
 
 	//reset button press counters:
 	left.downs = 0;
