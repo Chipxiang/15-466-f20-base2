@@ -53,8 +53,8 @@ struct TetrisMode : Mode {
 	void record_drawables();
 	glm::vec3 get_world_position(Scene::Transform* transform);
 	void break_down_child_parent_relations(Scene::Transform* transform);
-	void TetrisMode::remove_layer();
-	void TetrisMode::remove_lowest_layer();
+	void remove_layer();
+	void remove_lowest_layer();
 	// size of cube
 	static const int CUBE_SIZE = 2;
 	// the position of ground 
