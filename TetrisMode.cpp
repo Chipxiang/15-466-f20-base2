@@ -21,9 +21,10 @@ Load< MeshBuffer > cube_meshes(LoadTagDefault, []() -> MeshBuffer const* {
 	return ret;
 	});
 
-Load< Scene > cube_scene(LoadTagDefault, []() -> Scene const* {
-	return new Scene(data_path("cube2.scene"), [&](Scene& scene, Scene::Transform* transform, std::string const& mesh_name) {
-		Mesh const& mesh = cube_meshes->lookup(mesh_name);
+Load< Scene > cube_scene(LoadTagDefault, []() -> Scene const * {
+	return new Scene(data_path("cube2.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
+		std::cout << mesh_name << " " << transform->position.x << " " << transform->position.y << " " << transform->position.z << std::endl;
+		Mesh const &mesh = cube_meshes->lookup(mesh_name);
 
 		scene.drawables.emplace_back(transform);
 		Scene::Drawable& drawable = scene.drawables.back();
@@ -201,17 +202,59 @@ void TetrisMode::generate_cubes() {
 	}
 }
 
+void TetrisMode::create_floor() {
+	Mesh const &blue = cube_meshes->lookup("blue_plane");
+	Mesh const &orange = cube_meshes->lookup("orange_plane");
+	Mesh plane[2] = {blue, orange};
+	int current_index = 0;
+    
+	for (int x = -width; x < width; x += 2) {
+		for (int y = -width; y < width; y += 2) {
+			// create new transform
+			scene.transforms.emplace_back();
+			Scene::Transform *t = &scene.transforms.back();
+			t->position = glm::vec3(x, y, z-1);
+			t->name = "plane(" + std::to_string(x) + ", " + std::to_string(y) + ")";
+
+			Scene::Drawable drawable(t);
+			drawable.pipeline = lit_color_texture_program_pipeline;
+			drawable.pipeline.vao = cube_meshes_for_lit_color_texture_program;
+			drawable.pipeline.type = plane[current_index].type;
+			drawable.pipeline.start = plane[current_index].start;
+			drawable.pipeline.count = plane[current_index].count;
+			scene.drawables.emplace_back(drawable);
+
+			current_index = (current_index + 1) % 2;
+		}
+		current_index = (current_index + 1) % 2;
+	}
+}
+
 TetrisMode::TetrisMode() : scene(*cube_scene) {
 	for (auto& transform : scene.transforms) {
 		std::cout << transform.name << " " << transform.position.x << " " << transform.position.y << " " << transform.position.z << std::endl;
 		if (transform.name == "Cube") moving_block[0] = &transform;
+		if (transform.name == "orange_plane") plane[0] = &transform;
+		if (transform.name == "blue_plane") plane[1] = &transform;
 	}
 	if (moving_block[0] == nullptr) throw std::runtime_error("Cube not found.");
+	if (plane[0] == nullptr) throw std::runtime_error("orange_plane not found.");
+	if (plane[1] == nullptr) throw std::runtime_error("blue_plane not found.");
 
+	// clear the current drawables
+	while(scene.drawables.size() > 0)
+	 	scene.drawables.pop_back();
+
+
+	// create the floor 
+	create_floor();
+	// create the first moving block
 	generate_cubes();
 
 	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
 	camera = &scene.cameras.front();
+	// reset camera position
+	camera->transform->position = glm::vec3(54, -55, 30);
 }
 
 TetrisMode::~TetrisMode() {
@@ -312,7 +355,7 @@ void TetrisMode::update(float elapsed) {
 
 	//move camera:
 	{
-
+		/*
 		//combine inputs into a move:
 		constexpr float PlayerSpeed = 30.0f;
 		glm::vec2 move = glm::vec2(0.0f);
@@ -320,10 +363,6 @@ void TetrisMode::update(float elapsed) {
 		if (!left.pressed && right.pressed) move.x = 1.0f;
 		if (down.pressed && !up.pressed) move.y = -1.0f;
 		if (!down.pressed && up.pressed) move.y = 1.0f;
-
-		if (space.pressed) {
-			generate_cubes();
-		}
 
 		//make it so that moving diagonally doesn't go faster:
 		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
@@ -334,14 +373,37 @@ void TetrisMode::update(float elapsed) {
 		glm::vec3 forward = -frame[2];
 
 		camera->transform->position += move.x * right + move.y * forward;
-	}
-	if (!is_collide()) {
-		moving_block[0]->position += glm::vec3(0, 0, -0.1);
-	}
-	else {
-		record_drawables();
+		*/
+
+		// for testing
+		if (space.pressed) {
+			generate_cubes();
+		}
+ 
+		// TODO update the position checking 
+		if (left.pressed) {
+			if (moving_block[0]->position.x > -width)
+				moving_block[0]->position += glm::vec3(-2, 0, 0);
+		}
+		else if (right.pressed) {
+			if (moving_block[0]->position.x < width) {
+				moving_block[0]->position += glm::vec3(2, 0, 0);
+			}
+		}
+		else if (down.pressed) {
+			if (moving_block[0]->position.y > -width) {
+				moving_block[0]->position += glm::vec3(0, -2, 0);
+			}
+		}
+		else if (up.pressed) {
+			if (moving_block[0]->position.y < width) {
+				moving_block[0]->position += glm::vec3(0, 2, 0);
+			}
+		}
 	}
 
+	if (moving_block[0]->position.z > z)
+		moving_block[0]->position += glm::vec3(0, 0, -0.01);
 
 	//reset button press counters:
 	left.downs = 0;

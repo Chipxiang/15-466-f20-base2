@@ -29,6 +29,8 @@ struct TetrisMode : Mode {
 
 	//the moving cubes
 	Scene::Transform *moving_block[4];
+	// the floor
+	Scene::Transform *plane[2];
 	
 	// Tracking drawables of the settled cubes
 	static const int X_DIM = 10;
@@ -45,6 +47,8 @@ struct TetrisMode : Mode {
 	// generate new cubes
 	void generate_cubes();
 	bool is_collide();
+	// show the floor tiles
+	void create_floor();
 
 	void record_drawables();
 	// size of cube
@@ -54,5 +58,5 @@ struct TetrisMode : Mode {
 	static const int MIN_X = -10;
 	static const int MIN_Y = -10;
 	// the width of the space
-	int width = 20;
+	int width = 10;
 };
