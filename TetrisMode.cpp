@@ -63,7 +63,7 @@ Scene::Transform* TetrisMode::add_cube(Scene::Transform* parent, glm::vec3 pos_o
 	scene.drawables.emplace_back(drawable);
 	return t;
 }
-
+/*
 glm::vec3 TetrisMode::get_world_position(Scene::Transform* transform) {
 	glm::vec3 world_position;
 	if (transform->parent) {
@@ -72,6 +72,12 @@ glm::vec3 TetrisMode::get_world_position(Scene::Transform* transform) {
 	else {
 		world_position = transform->position;
 	}
+	return world_position;
+}*/
+
+glm::vec3 TetrisMode::get_world_position(Scene::Transform* transform) {
+	glm::vec3 world_position;
+	world_position = transform->make_local_to_world() * glm::vec4(0,0,0,1);
 	return world_position;
 }
 
