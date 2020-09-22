@@ -176,7 +176,7 @@ void TetrisMode::remove_layer() {
 	}
 }
 void TetrisMode::remove_lowest_layer() {
-	bool full = true;
+	//bool full = true;
 	int layer = 0;
 	for (int o = 0; o < X_DIM; o++) {
 		for (int p = 0; p < Y_DIM; p++) {
