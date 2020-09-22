@@ -67,50 +67,78 @@ Scene::Transform* TetrisMode::add_cube(Scene::Transform* parent, glm::vec3 pos_o
 bool TetrisMode::is_collide() {
 	// Check each of the moving block's position.
 	for (int i = 0; i < 4; i++) {
+		glm::vec3 world_position;
+		if (i != 0) {
+			world_position = moving_block[i]->make_local_to_parent() * glm::vec4(moving_block[0]->position.x, moving_block[0]->position.y, moving_block[0]->position.z, 1);
+		}
+		else {
+			world_position = moving_block[i]->position;
+		}
+
+		/*std::cout << "Cube: " << i << " " << "Pos:" << moving_block[i]->position.x << "," << moving_block[i]->position.y << "," << moving_block[i]->position.z << std::endl;
+		std::cout << "World Pos:" << world_position.x << "," << world_position.y << "," << world_position.z << std::endl;*/
 		// Floor
 		if (moving_block[i]->position.z <= GROUND_Z + CUBE_SIZE)
 			return true;
-		glm::vec3 world_position = moving_block[i]->position * moving_block[i]->make_local_to_world();
-		for (int n = 0; n < 4; n++) {
-			for (int m = 0; m < 3; m++) {
-				std::cout << moving_block[i]->make_local_to_world()[n][m] << " ";
+		
+		/*
+		for (int n = 0; n < 3; n++) {
+			for (int m = 0; m < 4; m++) {
+				std::cout << moving_block[i]->make_local_to_world()[m][n] << " ";
 			}
 			std::cout << std::endl;
-		}
-		// On the pile
-		int x = (int)(world_position.x - MIN_X)/ CUBE_SIZE;
-		int y = (int)(world_position.y - MIN_Y) / CUBE_SIZE;
-		int z = (int)(world_position.z - GROUND_Z) / CUBE_SIZE;
-		std::cout << "Cube: " << i << " " << "Pos:" << moving_block[i]->position.x << "," << moving_block[i]->position.y << "," << moving_block[i]->position.z << std::endl;
-		std::cout << "World Pos:" << world_position.x << "," << world_position.y << "," << world_position.z << std::endl;
-		if (!pile_drawables[x][y][z])
-			continue;
-		else
-			return true;
-		/*
-		for (int z = Z_DIM; z >= 0; z--) {
-			for (int x = 0; x < X_DIM; x++) {
-				for (int y = 0; y < Y_DIM; y++) {
-					if (pile_drawables[x][y][z] == -1)
-						break;
-					if (moving_block[i]->position.x == scene.drawables[pile_drawables[x][y][z]]->transform->position.x
-						&& moving_block[i]->position.y == scene.drawables[pile_drawables[x][y][z]]->transform->position.y
-						&& moving_block[i]->position.z <= scene.drawables[pile_drawables[x][y][z]]]->transform->position.z + CUBE_SIZE) {
-						return true;
-					}
-				}
-			}
 		}*/
+		// On the pile
+		int x = (int)ceil(world_position.x - MIN_X) / CUBE_SIZE;
+		int y = (int)ceil(world_position.y - MIN_Y) / CUBE_SIZE;
+		int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
+		if (!pile_exists[x][y][z])
+			continue;
+		else {
+			
+			return true;
+
+		}
 	}
 	return false;
 }
 
 void TetrisMode::record_drawables() {
-	for (int i = 0; i < 4; i++) {
-		int x = (int)moving_block[i]->position.x / CUBE_SIZE;
-		int y = (int)moving_block[i]->position.y / CUBE_SIZE;
-		int z = (int)(moving_block[i]->position.z - GROUND_Z) / CUBE_SIZE;
+	int i = 0;
+	std::list<Scene::Drawable>::iterator it = scene.drawables.end();
+	it--;
+	for (; i < 4; --it) {
+		std::cout << it->transform->name;
+		i++;
+		glm::vec3 world_position;
+		if(it->transform->parent)
+			world_position = it->transform->make_local_to_parent()* glm::vec4(it->transform->parent->position.x, it->transform->parent->position.y, it->transform->parent->position.z, 1);
+		else {
+			world_position = it->transform->position;
+		}
+		std::cout << world_position.x << "," << world_position.y << "," << world_position.z << std::endl;
+		int x = (int)ceil(world_position.x - MIN_X) / CUBE_SIZE;
+		int y = (int)ceil(world_position.y - MIN_Y) / CUBE_SIZE;
+		int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
+		pile_drawables[x][y][z] = it;
+		pile_exists[x][y][z] = true;
+		std::cout << x << "," << y << "," << z << std::endl;
 	}
+	
+	for (int o = 0; o < X_DIM; o++) {
+		for (int p = 0; p < Y_DIM; p++) {
+			for (int q = 0; q < Z_DIM; q++) {
+				if (pile_exists[o][p][q])
+					std::cout << pile_drawables[o][p][q]->transform->name;
+			}
+		}
+		std::cout << std::endl;
+	}
+	for (int i = 0; i < 4; i++) {
+		
+		
+	}
+
 }
 void TetrisMode::generate_cubes() {
 	// randomly generate 5 shapes
@@ -118,9 +146,24 @@ void TetrisMode::generate_cubes() {
 
 	// TODO put the previously moving block to the stable vector
 	// deleting the current block for testing
-	while (scene.drawables.size() > 0)
-		scene.drawables.pop_back();
-
+	//while (scene.drawables.size() > 0)
+	//	scene.drawables.pop_back();
+	/*
+	bool flag = false;
+	for (int o = 0; o < X_DIM; o++) {
+		if (flag) break;
+		for (int p = 0; p < Y_DIM; p++) {
+			if (flag) break;
+			for (int q = 0; q < Z_DIM; q++) {
+				if (flag) break;
+				if (pile_exists[o][p][q]) {
+					scene.drawables.erase(pile_drawables[o][p][q]);
+					pile_exists[o][p][q] = false;
+					flag = true;
+				}
+			}
+		}
+	}*/
 	// reset base_cuby by creating a new cube
 	moving_block[0] = add_cube(nullptr, glm::vec3(0, 0, 0));
 
@@ -294,6 +337,9 @@ void TetrisMode::update(float elapsed) {
 	}
 	if (!is_collide()) {
 		moving_block[0]->position += glm::vec3(0, 0, -0.1);
+	}
+	else {
+		record_drawables();
 	}
 
 

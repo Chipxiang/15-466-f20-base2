@@ -34,8 +34,8 @@ struct TetrisMode : Mode {
 	static const int X_DIM = 10;
 	static const int Y_DIM = 10;
 	static const int Z_DIM = 20;
-	Scene::Drawable * pile_drawables[X_DIM][Y_DIM][Z_DIM] = { {{}} };
-
+	std::list<Scene::Drawable>::iterator pile_drawables[X_DIM][Y_DIM][Z_DIM] = { {{}} };
+	bool pile_exists[X_DIM][Y_DIM][Z_DIM] = { {{false}} };
 	//camera:
 	Scene::Camera *camera = nullptr;
 
