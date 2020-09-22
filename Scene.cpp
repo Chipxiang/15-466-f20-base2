@@ -91,18 +91,19 @@ void Scene::draw(Camera const &camera) const {
 void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_light) const {
 	//Iterate through all drawables, sending each one to OpenGL:
 	for (auto const &drawable : drawables) {
-		/*
-		glm::vec3 pos = drawable.transform->position;
-		std::cout << drawable.transform->name << " " 
+		if (drawable.transform->name[0] == 'C') {
+			glm::vec3 pos = drawable.transform->position;
+			std::cout << drawable.transform->name << " " 
                    << pos.x << " " << pos.y << " " << pos.z << " ";
-		if (drawable.transform->parent) {
-			glm::mat4x3 parent_to_local = drawable.transform->make_parent_to_local();
-			glm::vec3 parent_pos = drawable.transform->parent->position;
-			glm::vec3 current_pos = parent_to_local * glm::vec4(parent_pos.x, parent_pos.y, parent_pos.z, -1.0);
-			std::cout << "(" << current_pos.x << ", " << current_pos.y << ", " << current_pos.z << ") ";
+			if (drawable.transform->parent) {
+				glm::mat4x3 parent_to_local = drawable.transform->make_parent_to_local();
+				glm::vec3 parent_pos = drawable.transform->parent->position;
+				glm::vec3 current_pos = parent_to_local * glm::vec4(parent_pos.x, parent_pos.y, parent_pos.z, -1.0);
+				std::cout << "(" << current_pos.x << ", " << current_pos.y << ", " << current_pos.z << ") ";
+			}
 		}
-		*/
-
+		
+		
 		//Reference to drawable's pipeline for convenience:
 		Scene::Drawable::Pipeline const &pipeline = drawable.pipeline;
 		//skip any drawables without a shader program set:
@@ -167,7 +168,7 @@ void Scene::draw(glm::mat4 const &world_to_clip, glm::mat4x3 const &world_to_lig
 
 	}
 
-	// std::cout << std::endl;
+	std::cout << std::endl;
 	// drawables done
 	glUseProgram(0);
 	glBindVertexArray(0);

@@ -380,27 +380,32 @@ void TetrisMode::update(float elapsed) {
 		// for testing
 		if (space.pressed) {
 			generate_cubes();
+			space.pressed = false;
 		}
  
 		// TODO update the position checking 
 		if (left.pressed) {
 			if (moving_block[0]->position.x > -width)
 				moving_block[0]->position += glm::vec3(-2, 0, 0);
+			left.pressed = false;
 		}
 		else if (right.pressed) {
 			if (moving_block[0]->position.x < width) {
 				moving_block[0]->position += glm::vec3(2, 0, 0);
 			}
+			right.pressed = false;
 		}
 		else if (down.pressed) {
 			if (moving_block[0]->position.y > -width) {
 				moving_block[0]->position += glm::vec3(0, -2, 0);
 			}
+			down.pressed = false;
 		}
 		else if (up.pressed) {
 			if (moving_block[0]->position.y < width) {
 				moving_block[0]->position += glm::vec3(0, 2, 0);
 			}
+			up.pressed = false;
 		}
 	}
 
