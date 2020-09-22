@@ -1,8 +1,8 @@
-# (TODO: your game's title)
+# 3D Tetris
 
-Author: (TODO: your name)
+Author: Jianxiang Li, Fengying Yang
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+Design: Tetris game in 3D world.
 
 Screen Shot:
 
@@ -10,9 +10,7 @@ Screen Shot:
 
 How To Play:
 
-(TODO: describe the controls and (if needed) goals/strategy.)
-
-Sources: (TODO: list a source URL for any assets you did not create yourself. Make sure you have a license for the asset.)
+You can move the block with keys WASD, and rotate the block with mouse's left, middle and right keys.
 
 This game was built with [NEST](NEST.md).
 
