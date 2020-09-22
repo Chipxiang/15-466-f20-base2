@@ -22,7 +22,7 @@ Load< MeshBuffer > cube_meshes(LoadTagDefault, []() -> MeshBuffer const* {
 
 Load< Scene > cube_scene(LoadTagDefault, []() -> Scene const * {
 	return new Scene(data_path("cube2.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
-		std::cout << mesh_name << " " << transform->position.x << " " << transform->position.y << " " << transform->position.z << std::endl;
+		//std::cout << mesh_name << " " << transform->position.x << " " << transform->position.y << " " << transform->position.z << std::endl;
 		Mesh const &mesh = cube_meshes->lookup(mesh_name);
 
 		scene.drawables.emplace_back(transform);
@@ -140,7 +140,7 @@ void TetrisMode::record_drawables() {
 		int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
 		pile_drawables[x][y][z] = it;
 		pile_exists[x][y][z] = true;
-		std::cout << x << "," << y << "," << z << std::endl;
+		//std::cout << x << "," << y << "," << z << std::endl;
 	}
 	/*
 	for (int o = 0; o < X_DIM; o++) {
@@ -474,12 +474,12 @@ void TetrisMode::draw(glm::uvec2 const& drawable_size) {
 		));
 
 		constexpr float H = 0.09f;
-		lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
+		lines.draw_text("Mouse motion rotates camera; Mouse click rotates, WASD moves; escape ungrabs mouse",
 			glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 		float ofs = 2.0f / drawable_size.y;
-		lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
+		lines.draw_text("Mouse motion rotates camera; Mouse click rotates, WASD moves; escape ungrabs mouse",
 			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + +0.1f * H + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
