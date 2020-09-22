@@ -33,9 +33,9 @@ struct TetrisMode : Mode {
 	Scene::Transform *plane[2];
 	
 	// Tracking drawables of the settled cubes
-	static const int X_DIM = 10;
-	static const int Y_DIM = 10;
-	static const int Z_DIM = 20;
+	static const int X_DIM = 11;
+	static const int Y_DIM = 11;
+	static const int Z_DIM = 11;
 	std::list<Scene::Drawable>::iterator pile_drawables[X_DIM][Y_DIM][Z_DIM] = { {{}} };
 	bool pile_exists[X_DIM][Y_DIM][Z_DIM] = { {{false}} };
 	//camera:

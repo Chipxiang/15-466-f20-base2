@@ -83,16 +83,20 @@ void TetrisMode::break_down_child_parent_relations(Scene::Transform* transform) 
 	transform->position.x = world_position.x;
 	transform->position.y = world_position.y;
 	transform->position.z = world_position.z;
+	transform->rotation.x = 1;
+	transform->rotation.y = 0;
+	transform->rotation.z = 0;
+	transform->rotation.w = 0;
+
 }
 bool TetrisMode::is_collide() {
 	// Check each of the moving block's position.
 	for (int i = 0; i < 4; i++) {
 		glm::vec3 world_position = get_world_position(moving_block[i]);
-
 		/*std::cout << "Cube: " << i << " " << "Pos:" << moving_block[i]->position.x << "," << moving_block[i]->position.y << "," << moving_block[i]->position.z << std::endl;
 		std::cout << "World Pos:" << world_position.x << "," << world_position.y << "," << world_position.z << std::endl;*/
 		// Floor
-		if (world_position.z <= GROUND_Z + CUBE_SIZE)
+		if (world_position.z <= GROUND_Z)
 			return true;
 		
 		/*
@@ -103,14 +107,21 @@ bool TetrisMode::is_collide() {
 			std::cout << std::endl;
 		}*/
 		// On the pile
-		int x = (int)ceil(world_position.x - MIN_X) / CUBE_SIZE;
-		int y = (int)ceil(world_position.y - MIN_Y) / CUBE_SIZE;
-		int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
-		if (!pile_exists[x][y][z])
+		int x = (int)(world_position.x - MIN_X) / CUBE_SIZE;
+		int y = (int)(world_position.y - MIN_Y) / CUBE_SIZE;
+		//int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
+		int z;
+		for ( z = Z_DIM - 1; z >= 0; z--) {
+			if (world_position.z <= 2 * (z + 1) + GROUND_Z) {
+				if (pile_exists[x][y][z])
+					return true;
+			}
+		}
+		/*if (!pile_exists[x][y][z])
 			continue;
 		else {
 			return true;
-		}
+		}*/
 	}
 	return false;
 }
@@ -122,9 +133,10 @@ void TetrisMode::record_drawables() {
 	for (; i < 4; --it) {
 		i++;
 		glm::vec3 world_position = get_world_position(it->transform);
-		std::cout << world_position.x << "," << world_position.y << "," << world_position.z << std::endl;
+		//std::cout << world_position.x << "," << world_position.y << "," << world_position.z << std::endl;
 		int x = (int)ceil(world_position.x - MIN_X) / CUBE_SIZE;
 		int y = (int)ceil(world_position.y - MIN_Y) / CUBE_SIZE;
+		
 		int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
 		pile_drawables[x][y][z] = it;
 		pile_exists[x][y][z] = true;
@@ -234,7 +246,7 @@ void TetrisMode::create_floor() {
 
 TetrisMode::TetrisMode() : scene(*cube_scene) {
 	for (auto& transform : scene.transforms) {
-		std::cout << transform.name << " " << transform.position.x << " " << transform.position.y << " " << transform.position.z << std::endl;
+		//std::cout << transform.name << " " << transform.position.x << " " << transform.position.y << " " << transform.position.z << std::endl;
 		if (transform.name == "Cube") moving_block[0] = &transform;
 		if (transform.name == "orange_plane") plane[0] = &transform;
 		if (transform.name == "blue_plane") plane[1] = &transform;
