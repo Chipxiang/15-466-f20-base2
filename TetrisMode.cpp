@@ -115,14 +115,14 @@ bool TetrisMode::is_collide() {
 		// On the pile
 		int x = (int)(world_position.x - MIN_X) / CUBE_SIZE;
 		int y = (int)(world_position.y - MIN_Y) / CUBE_SIZE;
-		//int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
-		int z;
-		for (z = Z_DIM - 1; z >= 0; z--) {
+		int z = (int)(world_position.z - GROUND_Z) / CUBE_SIZE;
+		//int z;
+		//for (z = Z_DIM - 1; z >= 0; z--) {
 			if (world_position.z <= 2 * (z + 1) + GROUND_Z) {
 				if (pile_exists[x][y][z])
 					return true;
 			}
-		}
+		//}
 		/*if (!pile_exists[x][y][z])
 			continue;
 		else {
@@ -464,28 +464,86 @@ void TetrisMode::update(float elapsed) {
 			space.pressed = false;
 		}
 
-		// TODO update the position checking 
 		if (left.pressed) {
-			if (moving_block[0]->position.x > -width)
+			bool can_move = true;
+			for (int i = 0; i < 4; i++) {
+				glm::vec3 world_position = get_world_position(moving_block[i]);
+				int x = (int)ceil(world_position.x - 2 - MIN_X) / CUBE_SIZE;
+				int y = (int)ceil(world_position.y - MIN_Y) / CUBE_SIZE;
+				int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
+				if (x < 0) {
+					can_move = false;
+					break;
+				}
+				if (pile_exists[x][y][z]) {
+					can_move = false;
+					break;
+				}
+			}
+			if (can_move)
 				moving_block[0]->position += glm::vec3(-2, 0, 0);
+			
 			left.pressed = false;
 		}
 		else if (right.pressed) {
-			if (moving_block[0]->position.x < width) {
-				moving_block[0]->position += glm::vec3(2, 0, 0);
+			bool can_move = true;
+			for (int i = 0; i < 4; i++) {
+				glm::vec3 world_position = get_world_position(moving_block[i]);
+				int x = (int)ceil(world_position.x + 2 - MIN_X) / CUBE_SIZE;
+				int y = (int)ceil(world_position.y - MIN_Y) / CUBE_SIZE;
+				int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
+				if (x > X_DIM - 2) {
+					can_move = false;
+					break;
+				}
+				if (pile_exists[x][y][z]) {
+					can_move = false;
+					break;
+				}
 			}
+			if(can_move)
+				moving_block[0]->position += glm::vec3(2, 0, 0);
+
 			right.pressed = false;
 		}
 		else if (down.pressed) {
-			if (moving_block[0]->position.y > -width) {
-				moving_block[0]->position += glm::vec3(0, -2, 0);
+			bool can_move = true;
+			for (int i = 0; i < 4; i++) {
+				glm::vec3 world_position = get_world_position(moving_block[i]);
+				int x = (int)ceil(world_position.x - MIN_X) / CUBE_SIZE;
+				int y = (int)ceil(world_position.y - 2 - MIN_Y) / CUBE_SIZE;
+				int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
+				if (y  < 0 ) {
+					can_move = false;
+					break;
+				}
+				if (pile_exists[x][y][z]) {
+					can_move = false;
+					break;
+				}
 			}
+			if(can_move)
+				moving_block[0]->position += glm::vec3(0, -2, 0);
 			down.pressed = false;
 		}
 		else if (up.pressed) {
-			if (moving_block[0]->position.y < width) {
-				moving_block[0]->position += glm::vec3(0, 2, 0);
+			bool can_move = true;
+			for (int i = 0; i < 4; i++) {
+				glm::vec3 world_position = get_world_position(moving_block[i]);
+				int x = (int)ceil(world_position.x - MIN_X) / CUBE_SIZE;
+				int y = (int)ceil(world_position.y + 2 - MIN_Y) / CUBE_SIZE;
+				int z = (int)ceil(world_position.z - GROUND_Z) / CUBE_SIZE;
+				if (y > Y_DIM - 2) {
+					can_move = false;
+					break;
+				}
+				if (pile_exists[x][y][z]) {
+					can_move = false;
+					break;
+				}
 			}
+			if (can_move)
+				moving_block[0]->position += glm::vec3(0, 2, 0);
 			up.pressed = false;
 		}
 	}
